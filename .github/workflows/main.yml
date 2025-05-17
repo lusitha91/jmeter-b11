@@ -1,0 +1,50 @@
+name: Run JMeter Test
+on:
+  workflow_dispatch:
+    inputs:
+      test-file:
+        description: 'Script Name'
+        required: true
+        default: 'FirstFinalScript.jmx'
+      users:
+        description: 'users'
+        required: true
+        default: '1'    
+      duration:
+        description: 'Duration'
+        required: true
+        default: '120'
+      rampup:
+        description: 'Ramp up period'
+        required: true
+        default: '10' 
+jobs:
+  jmeter_job:
+    runs-on: ubuntu-latest
+    name: JMeter Test Execution
+    steps:      
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Create reports directory
+      run: mkdir reports
+      
+    - name: Run JMeter Tests
+      uses: ./
+      with:
+        test-plan-path: ./Day1/${{ github.event.inputs.test-file }}
+        args: "-JUSER=${{ github.event.inputs.users }} -JRAMP=${{ github.event.inputs.rampup }} -JDURATION=${{ github.event.inputs.duration }} -e -o ./reports/html/"
+        
+    - name: Upload Results
+      uses: actions/upload-artifact@v4
+      with:
+        name: jmeter-results
+        path: result.jtl
+        if-no-files-found: error
+
+    - name: Upload HTML Reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: jmeter-reports
+        path: reports
+        if-no-files-found: error
